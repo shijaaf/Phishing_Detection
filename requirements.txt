@@ -1,0 +1,6 @@
+pandas
+matplotlib
+seaborn
+plotly
+colorama
+scikit-learn
