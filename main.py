@@ -4,7 +4,7 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from colorama import Fore, Back
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 # [Step 0: Import the dataset]
 
@@ -15,11 +15,13 @@ df = pd.read_csv('dataset_B_05_2020.csv')
 def summarize_dataset(df, class_column="status"):
 
     #1.1 Display df.head()
-    print(Back.GREEN + "Displaying dataset head:" + Back.RESET)
+    print("====================================")
+    print("Displaying dataset head:")
     print(df.head())
 
     #1.2 Display Column info
-    print(Back.GREEN + "Displaying column information as plotly table:" + Back.RESET)
+    print("====================================")
+    print("Displaying column information as plotly table:")
     col_info = pd.DataFrame({
         "Column": df.columns,
         "Data Type": df.dtypes.astype(str).values,
@@ -35,7 +37,8 @@ def summarize_dataset(df, class_column="status"):
     print("Column information output complete.")
 
     #1.3 Check Duplicate rows
-    print(Back.GREEN + "Checking for duplicate rows:" + Back.RESET)
+    print("====================================")
+    print("Checking for duplicate rows:")
     duplicates = df[df.duplicated()]
     if not duplicates.empty:
         fig2 = go.Figure(data=[go.Table(
@@ -49,7 +52,8 @@ def summarize_dataset(df, class_column="status"):
         print("No duplicate rows found.")
 
     #1.4 Check class distribution
-        print(Back.GREEN + "Displaying class distribution:" + Back.RESET)
+        print("====================================")
+        print("Displaying class distribution:")
     if class_column and class_column in df.columns:
         class_counts = df[class_column].value_counts().reset_index()
         class_counts.columns = [class_column, "Count"]
@@ -67,28 +71,23 @@ summarize_dataset(df)
 
 # [Step 2: Preprocessing]
 
-#2.1 Find categorical features
-categorical_cols = [col for col in df.select_dtypes(include='int').columns
-                 if df[col].nunique() <= 5]
-print(Back.GREEN + "Columns with Categorical Variables:" + Back.RESET)
-print(categorical_cols)
+#2.1 Dropping the URL column
+df = df.drop("url", axis=1)
 
-#2.2 One-hot encode categorical features
-print(df[categorical_cols].shape)
-df_cat = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+#2.2 replacing -1 values in domain_age and domain_registration_length
+print("====================================")
+print("Replacing -1 values in domain_age and domain_regitstration_length with their median")
 
-#2.3 Find numerical features
-numerical_cols = [col for col in df.columns
-                      if col not in categorical_cols
-                      and df[col].dtype in ['int64', 'float64']]
-print(Back.GREEN + "Columns with Numerical Variables:" + Back.RESET)
-print(numerical_cols)
+domain_age_median = df.loc[df['domain_age'] != -1, 'domain_age'].median()
+df.loc[df['domain_age'] == -1, 'domain_age'] = domain_age_median
+print(f"Replaced -1 in 'domain_age' with median: {domain_age_median}")
+domain_reg_len_median = df.loc[df['domain_registration_length'] != -1, 'domain_registration_length'].median()
+df.loc[df['domain_registration_length'] == -1, 'domain_registration_length'] = domain_reg_len_median
+print(f"Replaced -1 in 'domain_registration_length' with median: {domain_reg_len_median}")
 
-#2.4 Scale numerical features
-scaler = StandardScaler()
-df_num = pd.DataFrame(scaler.fit_transform(df[numerical_cols]), columns=numerical_cols)
+#2.3 Class label encoding
+print("====================================")
+print("Encoding the class label: status")
 
-#2.5 Combine numerical and categorical features
-df_final = pd.concat([df_cat, df_num], axis=1)
-df_final['status'] = df['status'].reset_index(drop=True)
-print(Back.GREEN + "Label encoding and standard scaling operations finished." + Back.RESET)
+df['status'] = df['status'].map({'phishing': 1, 'legitimate': 0})
+print("Class label 'status' encoded. Mapping: {'phishing': 1, 'legitimate': 0}")
