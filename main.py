@@ -91,3 +91,75 @@ print("Encoding the class label: status")
 
 df['status'] = df['status'].map({'phishing': 1, 'legitimate': 0})
 print("Class label 'status' encoded. Mapping: {'phishing': 1, 'legitimate': 0}")
+
+# 2.4 Correlation analysis and feature extraction
+print("====================================")
+print("Performing correlation analysis and feature extraction:")
+
+# Compute correlation matrix
+corr_matrix = df.corr()
+
+# Visualize correlation matrix as a heatmap
+print("Displaying correlation matrix as a heatmap:")
+fig_corr = px.imshow(
+    corr_matrix,
+    text_auto='.2f',
+    color_continuous_scale='RdBu_r',
+    title="Correlation Matrix Heatmap",
+    width=1000,
+    height=1000
+)
+fig_corr.update_layout(
+    xaxis_title="Features",
+    yaxis_title="Features",
+    font=dict(size=10)
+)
+fig_corr.show()
+print("Correlation matrix heatmap output complete.")
+
+# Feature extraction based on correlation with target
+print("====================================")
+print("Extracting features based on correlation with target 'status':")
+target_corr = corr_matrix['status'].drop('status').abs().sort_values(ascending=False)
+high_corr_features = target_corr[target_corr >= 0.3].index.tolist()
+print(f"Features with absolute correlation >= 0.3 with 'status': {high_corr_features}")
+
+# Identify highly correlated feature pairs to reduce redundancy
+print("====================================")
+print("Identifying highly correlated feature pairs (correlation > 0.8):")
+high_corr_pairs = []
+for i in range(len(corr_matrix.columns)):
+    for j in range(i + 1, len(corr_matrix.columns)):
+        if abs(corr_matrix.iloc[i, j]) > 0.8:
+            high_corr_pairs.append((corr_matrix.columns[i], corr_matrix.columns[j], corr_matrix.iloc[i, j]))
+
+if high_corr_pairs:
+    print("Highly correlated feature pairs (correlation > 0.8):")
+    for pair in high_corr_pairs:
+        print(f"{pair[0]} and {pair[1]}: {pair[2]:.2f}")
+
+    # Remove one feature from each highly correlated pair
+    features_to_remove = set()
+    for feat1, feat2, _ in high_corr_pairs:
+        # Keep the feature with higher correlation to target
+        if target_corr[feat1] > target_corr[feat2]:
+            features_to_remove.add(feat2)
+        else:
+            features_to_remove.add(feat1)
+    print(f"Features to remove due to high correlation: {list(features_to_remove)}")
+else:
+    print("No feature pairs with correlation > 0.8 found.")
+
+# Select final features
+selected_features = [col for col in high_corr_features if col not in features_to_remove]
+print(f"Selected features after correlation-based extraction: {selected_features}")
+
+# Create preprocessed dataset with selected features
+df_preprocessed = df[selected_features + ['status']]
+print(f"Preprocessed dataset shape after feature extraction: {df_preprocessed.shape}")
+
+# 2.5 Save preprocessed dataset
+print("====================================")
+print("Saving preprocessed dataset:")
+df_preprocessed.to_csv('preprocessed_dataset.csv', index=False)
+print("Preprocessed dataset saved as 'preprocessed_dataset.csv'.")
