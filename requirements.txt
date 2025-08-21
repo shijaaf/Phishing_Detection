@@ -4,3 +4,4 @@ seaborn
 plotly
 colorama
 scikit-learn
+imbalanced-learn

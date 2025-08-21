@@ -5,6 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from colorama import Fore, Back
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
+
 
 # [Step 0: Import the dataset]
 
@@ -163,3 +166,58 @@ print("====================================")
 print("Saving preprocessed dataset:")
 df_preprocessed.to_csv('preprocessed_dataset.csv', index=False)
 print("Preprocessed dataset saved as 'preprocessed_dataset.csv'.")
+
+# [Step 3: SMOTE Application and Train-Test Split]
+print("====================================")
+print("Applying SMOTE (entire dataset) and performing train-test split:")
+
+# Prepare features and target
+X = df_preprocessed.drop(columns=['status'])
+y = df_preprocessed['status']
+
+#3.1 SMOTE Before Train-Test Split (Entire Dataset)
+print("Applying SMOTE on entire dataset:")
+# Class distribution before SMOTE
+class_counts_before = y.value_counts().reset_index()
+class_counts_before.columns = ['status', 'Count']
+class_counts_before['status'] = class_counts_before['status'].map({1: 'phishing', 0: 'legitimate'})
+
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+
+# Class distribution after SMOTE
+class_counts_after = y_resampled.value_counts().reset_index()
+class_counts_after.columns = ['status', 'Count']
+class_counts_after['status'] = class_counts_after['status'].map({1: 'phishing', 0: 'legitimate'})
+
+# Create first table for entire dataset
+print("Displaying class distribution for entire dataset (before and after SMOTE):")
+combined_counts_entire = pd.DataFrame({
+    'Dataset': ['Entire Dataset (Before SMOTE)', 'Entire Dataset (Before SMOTE)',
+                'Entire Dataset (After SMOTE)', 'Entire Dataset (After SMOTE)'],
+    'Status': (class_counts_before['status'].tolist() +
+               class_counts_after['status'].tolist()),
+    'Count': (class_counts_before['Count'].tolist() +
+              class_counts_after['Count'].tolist())
+})
+
+fig_entire = go.Figure(data=[go.Table(
+    header=dict(values=['Dataset', 'Status', 'Count'], fill_color='lightblue', align='left'),
+    cells=dict(values=[combined_counts_entire['Dataset'], combined_counts_entire['Status'], combined_counts_entire['Count']],
+               fill_color='white', align='left'))
+])
+fig_entire.update_layout(title="Class Distribution for Entire Dataset (Before and After SMOTE)", height=400)
+fig_entire.show()
+print("Class distribution for entire dataset displayed.")
+print(f"X_resampled shape (entire dataset): {X_resampled.shape}")
+print(f"y_resampled shape (entire dataset): {y_resampled.shape}")
+
+#3.2 Train-Test Split
+print("Performing train-test split on preprocessed dataset:")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("Train-Test split complete.")
+print(f"X_train shape: {X_train.shape}")
+print(f"y_train shape: {y_train.shape}")
+print(f"X_test shape: {X_test.shape}")
+print(f"y_test shape: {y_test.shape}")
