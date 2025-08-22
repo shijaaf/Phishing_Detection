@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from catboost import CatBoostClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
@@ -308,3 +309,47 @@ print("Confusion Matrix for Best SVM:")
 print(confusion_matrix(y_test, rf_y_pred_best))
 
 # [Step 10: Train Default CatBoost and Evaluate]
+print("====================================")
+print("Training default CatBoost and evaluating:")
+categorical_features = ['google_index', 'nb_www', 'domain_in_title', 'phish_hints', 'ip']
+cb_default = CatBoostClassifier(
+    iterations=500,
+    learning_rate=0.05,
+    depth=6,
+    eval_metric='Accuracy',
+    verbose=100
+)
+cb_default.fit(X_train, y_train, cat_features=categorical_features)
+cb_y_pred_default = cb_default.predict(X_test)
+
+# Evaluation
+cb_accuracy_default = accuracy_score(y_test, cb_y_pred_default)
+print(f"Default CatBoost Accuracy: {cb_accuracy_default:.4f}")
+print("Classification Report for Default CatBoost:")
+print(classification_report(y_test, cb_y_pred_default))
+print("Confusion Matrix for Default CatBoost:")
+print(confusion_matrix(y_test, cb_y_pred_default))
+
+# [Step 11: Grid Search for CatBoost Hyperparameters]
+print("====================================")
+print("Performing Grid Search for CatBoost hyperparameters:")
+param_grid = {
+    'depth': [4, 6, 8],
+    'learning_rate': [0.01, 0.1],
+    'iterations': [100, 300]
+}
+grid_search = GridSearchCV(CatBoostClassifier(verbose=0), param_grid, cv=3, scoring='accuracy')
+grid_search.fit(X_train, y_train, cat_features=categorical_features)
+
+# Best parameters and evaluation
+print("Best parameters found by Grid Search:")
+print(grid_search.best_params_)
+best_cb = grid_search.best_estimator_
+cb_y_pred_best = best_cb.predict(X_test)
+
+cb_accuracy_best = accuracy_score(y_test, cb_y_pred_best)
+print(f"Best CatBoost Accuracy: {cb_accuracy_best:.4f}")
+print("Classification Report for Best CatBoost:")
+print(classification_report(y_test, cb_y_pred_best))
+print("Confusion Matrix for Best CatBoost:")
+print(confusion_matrix(y_test, cb_y_pred_best))
