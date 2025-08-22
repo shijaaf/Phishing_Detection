@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
@@ -168,7 +169,7 @@ print("Applying SMOTE (entire dataset) and performing train-test split:")
 # Prepare features and target
 X = df_preprocessed.drop(columns=['status'])
 y = df_preprocessed['status']
-
+'''
 # 4.1 SMOTE Before Train-Test Split (Entire Dataset)
 print("Applying SMOTE on entire dataset:")
 # Class distribution before SMOTE
@@ -207,7 +208,7 @@ fig_entire.show()
 print("Class distribution for entire dataset displayed.")
 print(f"X_resampled shape (entire dataset): {X_resampled.shape}")
 print(f"y_resampled shape (entire dataset): {y_resampled.shape}")
-
+'''
 # 4.2 Train-Test Split
 print("Performing train-test split on preprocessed dataset:")
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -230,15 +231,15 @@ print("====================================")
 print("Training default SVM and evaluating:")
 svm_default = SVC(random_state=42)
 svm_default.fit(X_train_scaled, y_train)
-y_pred_default = svm_default.predict(X_test_scaled)
+svm_y_pred_default = svm_default.predict(X_test_scaled)
 
 # Evaluation
-accuracy_default = accuracy_score(y_test, y_pred_default)
-print(f"Default SVM Accuracy: {accuracy_default:.4f}")
+svm_accuracy_default = accuracy_score(y_test, svm_y_pred_default)
+print(f"Default SVM Accuracy: {svm_accuracy_default:.4f}")
 print("Classification Report for Default SVM:")
-print(classification_report(y_test, y_pred_default))
+print(classification_report(y_test, svm_y_pred_default))
 print("Confusion Matrix for Default SVM:")
-print(confusion_matrix(y_test, y_pred_default))
+print(confusion_matrix(y_test, svm_y_pred_default))
 
 # [Step 7: Grid Search for SVM Hyperparameters]
 print("====================================")
@@ -256,11 +257,54 @@ grid_search.fit(X_train_scaled, y_train)
 print("Best parameters found by Grid Search:")
 print(grid_search.best_params_)
 best_svm = grid_search.best_estimator_
-y_pred_best = best_svm.predict(X_test_scaled)
+svm_y_pred_best = best_svm.predict(X_test_scaled)
 
-accuracy_best = accuracy_score(y_test, y_pred_best)
-print(f"Best SVM Accuracy: {accuracy_best:.4f}")
+svm_accuracy_best = accuracy_score(y_test, svm_y_pred_best)
+print(f"Best SVM Accuracy: {svm_accuracy_best:.4f}")
 print("Classification Report for Best SVM:")
-print(classification_report(y_test, y_pred_best))
+print(classification_report(y_test, svm_y_pred_best))
 print("Confusion Matrix for Best SVM:")
-print(confusion_matrix(y_test, y_pred_best))
+print(confusion_matrix(y_test, svm_y_pred_best))
+
+# [Step 8: Train Default RandomForest and Evaluate]
+print("====================================")
+print("Training default RandomForest and evaluating:")
+rf_default = RandomForestClassifier(random_state=42)
+rf_default.fit(X_train, y_train)
+rf_y_pred_default = rf_default.predict(X_test)
+
+# Evaluation
+rf_accuracy_default = accuracy_score(y_test, rf_y_pred_default)
+print(f"Default RandomForest Accuracy: {rf_accuracy_default:.4f}")
+print("Classification Report for Default RandomForest:")
+print(classification_report(y_test, rf_y_pred_default))
+print("Confusion Matrix for Default RandomForest:")
+print(confusion_matrix(y_test, rf_y_pred_default))
+
+# [Step 9: Grid Search for RandomForest Hyperparameters]
+print("====================================")
+print("Performing Grid Search for RandomForest hyperparameters:")
+param_grid = {
+    'n_estimators': [100, 200],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5],
+    'min_samples_leaf': [1, 2],
+    'max_features': ['sqrt', 'log2']
+}
+grid_search = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=5, scoring='accuracy')
+grid_search.fit(X_train, y_train)
+
+# Best parameters and evaluation
+print("Best parameters found by Grid Search:")
+print(grid_search.best_params_)
+best_rf = grid_search.best_estimator_
+rf_y_pred_best = best_rf.predict(X_test)
+
+rf_accuracy_best = accuracy_score(y_test, rf_y_pred_best)
+print(f"Best SVM Accuracy: {rf_accuracy_best:.4f}")
+print("Classification Report for Best SVM:")
+print(classification_report(y_test, rf_y_pred_best))
+print("Confusion Matrix for Best SVM:")
+print(confusion_matrix(y_test, rf_y_pred_best))
+
+# [Step 10: Train Default CatBoost and Evaluate]
