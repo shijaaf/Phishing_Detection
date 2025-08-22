@@ -5,3 +5,4 @@ plotly
 colorama
 scikit-learn
 imbalanced-learn
+catboost
