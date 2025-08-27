@@ -77,7 +77,7 @@ target_vector = preprocessed_data['status']
 
 
 #grouping values greater than 9 into a single category 10 for the nb_slash feature
-feature_matrix['nb_slash'] = feature_matrix['nb_slash'].apply(lambda x: 10 if x > 9 else x)
+feature_matrix['nb_slash'] = feature_matrix['nb_slash'].apply(lambda x: 9 if x > 8 else x)
 
 #grouping values greater than 9 into a single category 10 for the nb_dots feature
 #feature_matrix['nb_dots'] = feature_matrix['nb_dots'].apply(lambda x: 10 if x > 9 else x)
@@ -102,7 +102,7 @@ print("====================================")
 print("Training default CatBoost and evaluating:")
 categorical_features = [ 'nb_www', 'phish_hints', 'nb_slash', 'nb_eq', 'nb_dots']
 cb = CatBoostClassifier(
-    iterations=800,
+    iterations=700,
     learning_rate=0.03,
     depth=10,
     eval_metric='Accuracy',
@@ -132,7 +132,7 @@ X_train_unbal, X_test_unbal, y_train_unbal, y_test_unbal = train_test_split(
 
 # Train CatBoost on balanced split
 cb_bal = CatBoostClassifier(
-    iterations=800,
+    iterations=700,
     learning_rate=0.03,
     depth=10,
     eval_metric='Accuracy',
