@@ -1,7 +1,6 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from colorama import Fore, Back
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
@@ -12,7 +11,6 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
     log_loss, roc_curve, roc_auc_score
 from sklearn.model_selection import GridSearchCV
 import logging
-import os
 
 # Set up logging to track execution and errors
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
